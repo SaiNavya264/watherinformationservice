@@ -1,0 +1,36 @@
+package com.example.weatherservice.service;
+
+import com.example.weatherservice.model.WeatherResponse;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+@Service
+public class WeatherService {
+
+    @Value("${c5f8fad9472447e1aa075402242908}")
+    private String apiKey;
+
+    @Value("${https://www.weatherapi.com}")
+    private String apiUrl;
+
+    public WeatherResponse getWeatherByCity(String city) {
+        String url = String.format("%s?access_key=%s&query=%s", apiUrl, apiKey, city);
+        RestTemplate restTemplate = new RestTemplate();
+        var response = restTemplate.getForObject(url, Map.class);
+        
+        if (response != null && response.containsKey("current")) {
+            Map current = (Map) response.get("current");
+            Map location = (Map) response.get("location");
+            return new WeatherResponse(
+                    location.get("name").toString(),
+                    (double) current.get("temperature"),
+                    current.get("weather_descriptions").toString(),
+                    (int) current.get("humidity"),
+                    (double) current.get("wind_speed")
+            );
+        } else {
+            throw new RuntimeException("Unable to fetch weather data");
+        }
+    }
+}
